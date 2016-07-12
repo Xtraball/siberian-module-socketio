@@ -1,0 +1,12 @@
+{
+  "name": "SocketIO",
+  "description": "Realtime interaction for other modules",
+  "type": "module",
+  "version": "4.2.0",
+  "dependencies": {
+    "system": {
+      "type": "SAE",
+      "version": "4.2.0"
+    }
+  }
+}

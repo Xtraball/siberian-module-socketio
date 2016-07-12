@@ -1,0 +1,16 @@
+{
+  "name": "siberian",
+  "version": "0.1.0",
+  "description": "SiberianCMS node library",
+  "private": true,
+  "dependencies": {
+    "ini": "^1.3.4",
+    "lodash": "^4.13.1",
+    "mysql": "^2.11.1",
+    "php-unserialize": "0.0.1",
+    "q": "^1.4.1"
+  },
+  "main": "lib/siberian.js",
+  "author": "Xtraball SAS",
+  "license": "ISC"
+}

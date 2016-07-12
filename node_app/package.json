@@ -1,0 +1,14 @@
+{
+  "name": "siberian-socketio",
+  "description": "Realtime interaction for other modules",
+  "version": "4.2.0",
+  "dependencies": {
+    "express": "^4.14.0",
+    "http": "0.0.0",
+    "lodash": "^4.13.1",
+    "socket.io": "^1.4.8"
+  },
+  "main": "server.js",
+  "author": "Xtraball SAS",
+  "license": "ISC"
+}
