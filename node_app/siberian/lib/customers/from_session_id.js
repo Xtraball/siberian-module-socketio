@@ -6,7 +6,10 @@ function Siberian_Customers_From_SessionID(siberian) {
     var PHPUnserialize = require('php-unserialize');
     var Q = require("Q");
 
-    return (function(sessionID) {
+    return (function(sessionID, appID) {
+        if(!appID || !_.isNumber(+appID) || (+appID) < 1)
+            appID = null;
+
         var deferred = Q.defer();
         var db = siberian.application.db;
 
@@ -19,22 +22,29 @@ function Siberian_Customers_From_SessionID(siberian) {
 
                 if(_.has(result, "data")) {
                     var data = PHPUnserialize.unserializeSession(result.data);
-                    if(_.has(data, "mobile") && _.get(data.mobile, "current_type") === "customer") {
-                        var customer_id = +data.mobile.object_id;
-                        if(_.isNumber(customer_id) && customer_id > 0) {
-                            db.query("SELECT * FROM customer WHERE customer_id=?;", [customer_id], function(err, results) {
-                                if(err)
-                                    return deferred.reject(err);
+                    var customer_id = null;
+
+                    if(_.get(data, ("mobile"+appID+".current_type")) === "customer") {
+                        customer_id = +_.get(data, "mobile" + appID + ".object_id");
+                    }
+
+                    if(customer_id === null && _.get(data, ("mobile.current_type")) === "customer") {
+                        customer_id = +_.get(data, "mobile.object_id");
+                    }
+
+                    if(_.isNumber(customer_id) && customer_id > 0) {
+                        db.query("SELECT * FROM customer WHERE customer_id=?;", [customer_id], function(err, results) {
+                            if(err)
+                                return deferred.reject(err);
 
 
-                                if(results.length > 0) {
-                                    return deferred.resolve(results[0]);
-                                }
+                            if(results.length > 0) {
+                                return deferred.resolve(results[0]);
+                            }
 
-                                return deferred.reject(null);
-                            });
-                            return;
-                        }
+                            return deferred.reject(null);
+                        });
+                        return;
                     }
                 }
             }

@@ -1,0 +1,16 @@
+node_modules/
+.DS_Store
+npm-debug.log
+ionic.project
+.idea
+/tmp
+*.sublime-*
+build/
+__*
+developer.json
+
+# Editor
+*.un~
+*.swp
+*.swo
+*.swn
