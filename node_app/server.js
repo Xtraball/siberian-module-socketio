@@ -1,11 +1,13 @@
+#!/usr/bin/env node
 var app = require('express')();
 var server = require('http').createServer(app);
 
 var path = require('path');
 var process = require("process");
 var _ = require('lodash');
+var argv = require('yargs').argv;
 
-var siberian_path = path.resolve(__dirname, '../../../../../');
+var siberian_path = path.resolve(process.cwd(), argv._[0]); // path.resolve(__dirname, '../../../../../');
 var siberian = require('./siberian')(siberian_path);
 
 app.get('/running', function (req, res) {
