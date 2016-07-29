@@ -24,4 +24,52 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
         ))->insertOrUpdate(array("path"));
     }
 
+    /**
+     * @param Siberian_Cron $cron
+     * @param Cron_Model_Cron $task
+     */
+    public static function serve($cron, $task) {
+        $is_running = self::testService(35500);
+        if(!$is_running) {
+            $cron->log("Node server is not running, starting.");
+
+            $base_path = Core_Model_Directory::getBasePathTo("");
+            $base_node = Core_Model_Directory::getBasePathTo("app/local/modules/SocketIO/node_app");
+
+            $command =  sprintf("%s %s/server.js %s", "/usr/local/bin/node", $base_node, $base_path);
+
+            try {
+                exec($command, $output, $return);
+            } catch(Exception $e) {
+                $cron->log("Node server exception.");
+            }
+
+        } else {
+            $cron->log("Node server is running, continue.");
+        }
+
+    }
+
+    /**
+     * @return bool
+     */
+    public static function testService($port = 35500) {
+        $host = "127.0.0.1";
+
+        $connection = @fsockopen($host, $port, $errno, $errstr, 2);
+        if (is_resource($connection)) {
+            fclose($connection);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public static function serviceStatus() {
+        return self::testService(35500);
+    }
+
 }
