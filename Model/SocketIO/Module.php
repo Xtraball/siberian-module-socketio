@@ -35,8 +35,14 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
 
             $base_path = Core_Model_Directory::getBasePathTo("");
             $base_node = Core_Model_Directory::getBasePathTo("app/local/modules/SocketIO/node_app");
+            $bin_path = System_Model_Config::getValueFor("node_binary_path");
 
-            $command =  sprintf("%s %s/server.js %s", "/usr/local/bin/node", $base_node, $base_path);
+            if(!$bin_path) {
+                $cron->log("Node is not installed.");
+                return;
+            }
+
+            $command =  sprintf("%s %s/server.js %s", $bin_path, $base_node, $base_path);
 
             try {
                 exec($command, $output, $return);
