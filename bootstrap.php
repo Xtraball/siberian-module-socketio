@@ -20,7 +20,7 @@ class SocketIO_Bootstrap {
 
           if(strpos($base_index, "modules/socketio/libraries/socket.io.min.js") === false) {
             $search = "</head>";
-            $replace = "        <script src='modules/socketio/libraries/socket.io.min.js'></script>
+            $replace = "    <script src='modules/socketio/libraries/socket.io.min.js'></script>
          </head>";
 
               $base_index = str_replace($search, $replace, $base_index);
