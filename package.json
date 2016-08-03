@@ -8,5 +8,8 @@
       "type": "SAE",
       "version": "4.2.0"
     }
+  },
+  "assets": {
+    "path": "resources/var/apps/modules/socketio"
   }
 }
