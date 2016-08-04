@@ -64,7 +64,7 @@ function Siberian_Application_Db(siberian) {
                                     throw err;
 
                                 if(_.isArray(result) && _.isObject(result[0]) && _.isString(result[0].charset) && result[0].charset.length > 0) {
-                                    connection.changeUser({charset : result[0].charset}, function(err) {
+                                    _connection.changeUser({charset : result[0].charset}, function(err) {
                                         _connection[method].apply(_connection, args);
                                     });
                                 } else {
