@@ -4,7 +4,7 @@ function Siberian_Customers_From_SessionID(siberian) {
 
     var _ = require("lodash");
     var PHPUnserialize = require('php-unserialize');
-    var Q = require("Q");
+    var Q = require("q");
 
     return (function(sessionID, appID) {
         if(!appID || !_.isNumber(+appID) || (+appID) < 1)

@@ -9,12 +9,12 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
         return $this;
     }
 
-    /*
+    /**
      * Add a socket.io module to execute
      *
-     * @params string $name Name of the module (could be anything)
-     * @params string $path Path of the JS file of the module (e.g. : MyModule/resources/socketio/mymodule.js)
-     * @returns SocketIO_Model_SocketIO_Module added model
+     * @param string $name Name of the module (could be anything)
+     * @param string $path Path of the JS file of the module (e.g. : MyModule/resources/socketio/mymodule.js)
+     * @return SocketIO_Model_SocketIO_Module added model
      */
     public static function installSocket($name, $path) {
         $module = new self();
@@ -29,7 +29,7 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
      * @param Cron_Model_Cron $task
      */
     public static function serve($cron, $task) {
-        $is_running = self::testService(35500);
+        $is_running = self::serviceStatus();
         if(!$is_running) {
             $cron->log("Node server is not running, starting.");
 
@@ -53,7 +53,6 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
         } else {
             $cron->log("Node server is running, continue.");
         }
-
     }
 
     /**
@@ -61,6 +60,9 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
      */
     public static function testService($port = 35500) {
         $host = "127.0.0.1";
+
+        if(!is_numeric($port))
+            return false;
 
         $connection = @fsockopen($host, $port, $errno, $errstr, 2);
         if (is_resource($connection)) {
@@ -75,7 +77,21 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
      * @return bool
      */
     public static function serviceStatus() {
-        return self::testService(35500);
+        $port = self::getSocketIOPort();
+        return $port ? self::testService($port) : false;
     }
 
+    public static function getSocketIOPort() {
+        $config = new System_Model_Config();
+        $config->find("socket_io_port", "code");
+        $port = $config->getValue();
+
+        if(is_numeric($port)) {
+            $port = intval($port, 10);
+            if($port > 0)
+                return $port;
+        }
+
+        return null;
+    }
 }
