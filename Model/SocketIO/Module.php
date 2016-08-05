@@ -29,56 +29,32 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
      * @param Cron_Model_Cron $task
      */
     public static function serve($cron, $task) {
-        $is_running = self::serviceStatus();
-        if(!$is_running) {
-            $cron->log("Node server is not running, starting.");
+        $base_path = Core_Model_Directory::getBasePathTo("");
+        $base_node = Core_Model_Directory::getBasePathTo("app/local/modules/SocketIO/node_app");
+        $bin_path = System_Model_Config::getValueFor("node_binary_path");
 
-            $base_path = Core_Model_Directory::getBasePathTo("");
-            $base_node = Core_Model_Directory::getBasePathTo("app/local/modules/SocketIO/node_app");
-            $bin_path = System_Model_Config::getValueFor("node_binary_path");
-
-            if(!$bin_path) {
-                $cron->log("Node is not installed.");
-                return;
-            }
-
-            $command =  sprintf("%s %s/server.js %s", $bin_path, $base_node, $base_path);
-
-            try {
-                exec($command, $output, $return);
-            } catch(Exception $e) {
-                $cron->log("Node server exception.");
-            }
-
-        } else {
-            $cron->log("Node server is running, continue.");
+        if(!$bin_path) {
+            $cron->log("Node is not installed.");
+            return;
         }
-    }
 
-    /**
-     * @return bool
-     */
-    public static function testService($port = 35500) {
-        $host = "127.0.0.1";
+        $command =  sprintf("%s %s/server.js %s", $bin_path, $base_node, $base_path);
 
-        if(!is_numeric($port))
-            return false;
-
-        $connection = @fsockopen($host, $port, $errno, $errstr, 2);
-        if (is_resource($connection)) {
-            fclose($connection);
-            return true;
-        } else {
-            return false;
+        try {
+            exec($command, $output, $return);
+        } catch(Exception $e) {
+            $cron->log("Node server exception.");
         }
+
     }
 
     /**
      * @return bool
      */
     public static function serviceStatus() {
-        $port = self::getSocketIOPort();
-        return $port ? self::testService($port) : false;
+        $output = null;
+        exec($command, $output, $return);
+        return trim($output) === "running";
     }
 
     public static function getSocketIOPort() {
@@ -86,8 +62,11 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
         $config->find("socket_io_port", "code");
         $port = $config->getValue();
 
+        file_put_contents("/tmp/coucou.txt", $port);
+
         if(is_numeric($port)) {
             $port = intval($port, 10);
+            file_put_contents("/tmp/coucou2.txt", $port);
             if($port > 0)
                 return $port;
         }
