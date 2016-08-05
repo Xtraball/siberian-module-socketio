@@ -55,28 +55,32 @@ function Siberian_Application_Db(siberian) {
             } else {
                 self.init();
                 if(_.isObject(_connection)) {
-                    var params = siberian.application.config.app.ini.production.resources.db.params;
-                    if(!_.isString(params.charset) || params.charset.length < 1) {
-                        _connection.query(
-                            "SELECT @@character_set_database AS charset;",
-                            function(err, result) {
-                                if(err)
-                                    throw err;
+                    _connection.query("SET sql_mode = '';", function(err) {
+                        if(err)
+                            throw err;
+                        var params = siberian.application.config.app.ini.production.resources.db.params;
+                        if(!_.isString(params.charset) || params.charset.length < 1) {
+                            _connection.query(
+                                "SELECT @@character_set_database AS charset;",
+                                function(err, result) {
+                                    if(err)
+                                        throw err;
 
-                                if(_.isArray(result) && _.isObject(result[0]) && _.isString(result[0].charset) && result[0].charset.length > 0) {
-                                    _connection.changeUser({charset : result[0].charset}, function(err) {
+                                    if(_.isArray(result) && _.isObject(result[0]) && _.isString(result[0].charset) && result[0].charset.length > 0) {
+                                        _connection.changeUser({charset : result[0].charset}, function(err) {
+                                            _connection[method].apply(_connection, args);
+                                        });
+                                    } else {
+                                        // Tant pis
+                                        console.warn("Unable to find DB charset");
                                         _connection[method].apply(_connection, args);
-                                    });
-                                } else {
-                                    // Tant pis
-                                    console.warn("Unable to find DB charset");
-                                    _connection[method].apply(_connection, args);
+                                    }
                                 }
-                            }
-                        );
-                    } else {
-                        _connection[method].apply(_connection, args);
-                    }
+                            );
+                        } else {
+                            _connection[method].apply(_connection, args);
+                        }
+                    });
                 }
             }
         }

@@ -97,6 +97,7 @@ server.on("listening", function() {
 
 server.on("error", function(err) {
   if(err.errno === 'EADDRINUSE') {
+    console.warn("Failed using port "+port+" -> "+err.errno);
     if(port < 36000) {
       port++;
       server.listen(port);
