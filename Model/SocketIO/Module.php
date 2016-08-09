@@ -52,6 +52,16 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
      * @return bool
      */
     public static function serviceStatus() {
+        $base_path = Core_Model_Directory::getBasePathTo("");
+        $base_node = Core_Model_Directory::getBasePathTo("app/local/modules/SocketIO/node_app");
+        $bin_path = System_Model_Config::getValueFor("node_binary_path");
+
+        if(!$bin_path) {
+            $cron->log("Node is not installed.");
+            return;
+        }
+
+        $command =  sprintf("%s %s/server.js %s --status", $bin_path, $base_node, $base_path);
         $output = null;
         exec($command, $output, $return);
         return trim($output) === "running";
