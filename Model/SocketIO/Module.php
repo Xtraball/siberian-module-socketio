@@ -57,14 +57,13 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
         $bin_path = System_Model_Config::getValueFor("node_binary_path");
 
         if(!$bin_path) {
-            $cron->log("Node is not installed.");
-            return;
+            return false;
         }
 
         $command =  sprintf("%s %s/server.js %s --status", $bin_path, $base_node, $base_path);
         $output = null;
         exec($command, $output, $return);
-        return trim($output) === "running";
+        return trim($output[0]) === "running";
     }
 
     public static function getSocketIOPort() {
