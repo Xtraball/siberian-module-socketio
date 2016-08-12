@@ -29,12 +29,12 @@ function Siberian_Application_Db(siberian) {
                 database: params.dbname,
                 charset: params.charset
             });
+            firstConnection = true;
 
             _connection.on('error', function(err) {
                 console.log('db error', err);
                 if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
-                  firstConnection = true;
-                  self.init();                         // lost due to either server restart, or a
+                  self.reset();                         // lost due to either server restart, or a
                 } else {                                      // connnection idle timeout (the wait_timeout
                   throw err;                                  // server variable configures this)
                 }
@@ -44,8 +44,7 @@ function Siberian_Application_Db(siberian) {
         _connection.connect(function(err) {              // The server is either down
             if(err) {                                     // or restarting (takes a while sometimes).
               console.log('error when connecting to db:', err);
-              firstConnection = true;
-              setTimeout(self.init, 2000); // We introduce a delay before attempting to reconnect,
+              setTimeout(self.reset, 1000); // We introduce a delay before attempting to reconnect,
             }                                     // to avoid a hot loop, and to allow our node script to
         });                                     // process asynchronous requests in the meantime.
 
