@@ -17,6 +17,8 @@ function Siberian_Application_Db(siberian) {
         return self.init();
     };
 
+    var firstConnection = true;
+
     self.init = function() {
         if(_connection == null) {
             var params = siberian.application.config.app.ini.production.resources.db.params;
@@ -31,6 +33,7 @@ function Siberian_Application_Db(siberian) {
             _connection.on('error', function(err) {
                 console.log('db error', err);
                 if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
+                  firstConnection = true;
                   self.init();                         // lost due to either server restart, or a
                 } else {                                      // connnection idle timeout (the wait_timeout
                   throw err;                                  // server variable configures this)
@@ -41,6 +44,7 @@ function Siberian_Application_Db(siberian) {
         _connection.connect(function(err) {              // The server is either down
             if(err) {                                     // or restarting (takes a while sometimes).
               console.log('error when connecting to db:', err);
+              firstConnection = true;
               setTimeout(self.init, 2000); // We introduce a delay before attempting to reconnect,
             }                                     // to avoid a hot loop, and to allow our node script to
         });                                     // process asynchronous requests in the meantime.
@@ -66,7 +70,7 @@ function Siberian_Application_Db(siberian) {
     ], function(method) {
         self[method] = function() {
             var args = arguments;
-            if(_.isObject(_connection) && _.isFunction(_connection[method])) {
+            if(!firstConnection && _.isObject(_connection) && _.isFunction(_connection[method])) {
                 _connection[method].apply(_connection, args);
             } else {
                 self.init();
@@ -84,6 +88,7 @@ function Siberian_Application_Db(siberian) {
 
                                     if(_.isArray(result) && _.isObject(result[0]) && _.isString(result[0].charset) && result[0].charset.length > 0) {
                                         _connection.changeUser({charset : result[0].charset}, function(err) {
+                                            firstConnection = false;
                                             _connection[method].apply(_connection, args);
                                         });
                                     } else {
