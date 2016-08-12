@@ -32,21 +32,24 @@ function Siberian_Application_Db(siberian) {
             firstConnection = true;
 
             _connection.on('error', function(err) {
-                console.log('db error', err);
                 if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
+                  console.log('db timeout: reconnecting');
                   self.reset();                         // lost due to either server restart, or a
                 } else {                                      // connnection idle timeout (the wait_timeout
+                  console.log('db error', err);
                   throw err;                                  // server variable configures this)
                 }
             });
         }
 
-        _connection.connect(function(err) {              // The server is either down
-            if(err) {                                     // or restarting (takes a while sometimes).
-              console.log('error when connecting to db:', err);
-              setTimeout(self.reset, 1000); // We introduce a delay before attempting to reconnect,
-            }                                     // to avoid a hot loop, and to allow our node script to
-        });                                     // process asynchronous requests in the meantime.
+        if(_connection.state == "disconnected") {
+            _connection.connect(function(err) {              // The server is either down
+                if(err) {                                     // or restarting (takes a while sometimes).
+                  console.log('error when connecting to db:', err);
+                  setTimeout(self.reset, 1000); // We introduce a delay before attempting to reconnect,
+                }                                     // to avoid a hot loop, and to allow our node script to
+            });                                     // process asynchronous requests in the meantime.
+        }
 
         return self;
     };
@@ -92,12 +95,14 @@ function Siberian_Application_Db(siberian) {
                                         });
                                     } else {
                                         // Tant pis
+                                        firstConnection = false;
                                         console.warn("Unable to find DB charset");
                                         _connection[method].apply(_connection, args);
                                     }
                                 }
                             );
                         } else {
+                            firstConnection = false;
                             _connection[method].apply(_connection, args);
                         }
                     });
