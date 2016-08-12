@@ -15,7 +15,7 @@ function Siberian_Customers_From_SessionID(siberian) {
 
         db.query("SELECT data FROM session WHERE session_id=?;", [sessionID], function(err, results) {
             if(err)
-                deferred.reject(err);
+                return deferred.reject(err);
 
             if(results.length > 0) {
                 var result = results[0];
