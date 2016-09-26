@@ -44,7 +44,7 @@ function Siberian_Customers_From_SessionID(siberian) {
 
                             return deferred.reject(null);
                         });
-                        return;
+                        return deferred.promise;
                     }
                 }
             }
