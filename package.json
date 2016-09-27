@@ -2,7 +2,7 @@
   "name": "SocketIO",
   "description": "Realtime interaction for other modules",
   "type": "module",
-  "version": "1.0.5",
+  "version": "1.0.5.1",
   "dependencies": {
     "system": {
       "type": "SAE",
@@ -10,6 +10,7 @@
     }
   },
   "assets": {
-    "path": "resources/var/apps/modules/socketio"
+      "path": "resources/var/apps/modules/socketio",
+      "folder": "socketio"
   }
 }
