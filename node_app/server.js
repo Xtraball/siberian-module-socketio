@@ -10,7 +10,8 @@ var argv = require('yargs').argv;
 var siberian_path = path.resolve(process.cwd(), argv._[0]);
 var siberian = require('./siberian')(siberian_path);
 
-var print_status = argv.status
+var print_status = argv.status;
+var kill = argv.kill;
 var pid = null, port = null;
 var pid_folder = path.join(siberian_path, "var/pid/");
 try { fs.mkdirSync(pid_folder); } catch(e) { if(e.code !== "EEXIST") throw e; }
@@ -28,23 +29,48 @@ try {
   }
 }
 
-check_server(function(server_running) {
-  if(print_status) {
-    console.log(server_running ? "running" : "stopped");
-    process.exit(0);
-  } else {
-    if(server_running) {
-      console.log("Server is already running.");
-      process.exit(0);
-    } else {
-      if(pid) {
-        // force kill old server just in case it hanged
-        try { process.kill(pid, 9); } catch (e) { }
-      }
-      run_server();
+if(kill) {
+    try {
+        if(pid > 0) {
+            process.kill(pid, "SIGKILL");
+        } else {
+            console.warn("Warning: no PID exists");
+        }
+        try {
+            fs.unlinkSync(pid_path);
+        } catch (e) {
+            if(e.code !== "ENOENT") {
+                throw e;
+            }
+        }
+    } catch (e) {  // will throw an exception if pid doesn't exists
+        if(e.errno === "ESRCH") {
+            console.warn("Warning: PID "+pid+ " doesn't exists");
+        } else {
+            throw e;
+        }
     }
-  }
-});
+    console.log("killed");
+    process.exit(0);
+} else {
+    check_server(function(server_running) {
+        if(print_status) {
+            console.log(server_running ? "running" : "stopped");
+            process.exit(0);
+        } else {
+            if(server_running) {
+                console.log("Server is already running.");
+                process.exit(0);
+            } else {
+                if(pid) {
+                    // force kill old server just in case it hanged
+                    try { process.kill(pid, 9); } catch (e) { }
+                }
+                run_server();
+            }
+        }
+    });
+}
 
 function run_server() {
   var http = require("http");
@@ -152,7 +178,7 @@ function run_server() {
       }
     }
     throw err;
-  })
+  });
 
   server.listen(port);
 }

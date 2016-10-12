@@ -66,16 +66,28 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
         return trim($output[0]) === "running";
     }
 
+    public static function killServer() {
+        $base_path = Core_Model_Directory::getBasePathTo("");
+        $base_node = Core_Model_Directory::getBasePathTo("app/local/modules/SocketIO/node_app");
+        $bin_path = System_Model_Config::getValueFor("node_binary_path");
+
+        if(!$bin_path) {
+            return false;
+        }
+
+        $command =  sprintf("%s %s/server.js %s --kill", $bin_path, $base_node, $base_path);
+        $output = null;
+        exec($command, $output, $return);
+        return trim($output[0]) === "killed";
+    }
+
     public static function getSocketIOPort() {
         $config = new System_Model_Config();
         $config->find("socket_io_port", "code");
         $port = $config->getValue();
 
-        file_put_contents("/tmp/coucou.txt", $port);
-
         if(is_numeric($port)) {
             $port = intval($port, 10);
-            file_put_contents("/tmp/coucou2.txt", $port);
             if($port > 0)
                 return $port;
         }

@@ -2,7 +2,7 @@
   "name": "SocketIO",
   "description": "Realtime interaction for other modules",
   "type": "module",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "dependencies": {
     "system": {
       "type": "SAE",
