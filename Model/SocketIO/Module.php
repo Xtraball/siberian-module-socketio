@@ -30,6 +30,10 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
      */
     public static function serve($cron, $task) {
         $base_path = Core_Model_Directory::getBasePathTo("");
+        $log_path = Core_Model_Directory::getBasePathTo("var/log/modules/socketio.log");
+        if(!mkdir(basename($log_path), 0777, true)) {
+            $log_path = Core_Model_Directory::getBasePathTo("var/log/socketio.log");
+        }
         $base_node = Core_Model_Directory::getBasePathTo("app/local/modules/SocketIO/node_app");
         $bin_path = System_Model_Config::getValueFor("node_binary_path");
 
@@ -38,7 +42,7 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
             return;
         }
 
-        $command =  sprintf("%s %s/server.js %s", $bin_path, $base_node, $base_path);
+        $command =  sprintf("%s %s/server.js %s >> %s 2>&1", $bin_path, $base_node, $base_path, $log_path);
 
         try {
             exec($command, $output, $return);
@@ -68,6 +72,10 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
 
     public static function killServer() {
         $base_path = Core_Model_Directory::getBasePathTo("");
+        $log_path = Core_Model_Directory::getBasePathTo("var/log/modules/socketio.log");
+        if(!mkdir(basename($log_path), 0777, true)) {
+            $log_path = Core_Model_Directory::getBasePathTo("var/log/socketio.log");
+        }
         $base_node = Core_Model_Directory::getBasePathTo("app/local/modules/SocketIO/node_app");
         $bin_path = System_Model_Config::getValueFor("node_binary_path");
 
@@ -75,7 +83,7 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
             return false;
         }
 
-        $command =  sprintf("%s %s/server.js %s --kill", $bin_path, $base_node, $base_path);
+        $command =  sprintf("%s %s/server.js %s --kill >> %s 2>&1", $bin_path, $base_node, $base_path, $log_path);
         $output = null;
         exec($command, $output, $return);
         return trim($output[0]) === "killed";
