@@ -31,7 +31,7 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
     public static function serve($cron, $task) {
         $base_path = Core_Model_Directory::getBasePathTo("");
         $log_path = Core_Model_Directory::getBasePathTo("var/log/modules/socketio.log");
-        if(!mkdir(basename($log_path), 0777, true)) {
+        if(!is_dir(dirname($log_path)) && !mkdir(dirname($log_path), 0777, true)) {
             $log_path = Core_Model_Directory::getBasePathTo("var/log/socketio.log");
         }
         $base_node = Core_Model_Directory::getBasePathTo("app/local/modules/SocketIO/node_app");
