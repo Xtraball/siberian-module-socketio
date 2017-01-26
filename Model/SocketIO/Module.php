@@ -24,6 +24,7 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
         ))->insertOrUpdate(array("path"));
     }
 
+
     /**
      * @param Siberian_Cron $cron
      * @param Cron_Model_Cron $task
@@ -50,6 +51,18 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
             $cron->log("Node server exception.");
         }
 
+        if($log = @file_get_contents($log_path)) {
+            $pos = strrpos($log, "---STARTING---");
+            if($pos >= 0) {
+                $log = substr($log, $pos);
+
+                preg_match("/^\[Error\:(.*)\]$/m", $log, $matches);
+
+                if(count($matches) > 0) {
+                    throw new Exception("SocketIO: ".trim($matches[1]));
+                }
+            }
+        }
     }
 
     /**

@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+
+console.log("---STARTING---");
+
 var path = require('path');
 var fs = require('fs');
 var net = require('net');
@@ -80,143 +83,137 @@ Server.init = function() {
                 }
             });
         }
-    })
-}
+    });
+};
 
 Server.start = function() {
+    return getHttpOptions().then(function(res){
+        var server;
 
-    getHttpOptions().then(function(res){
-
-        try {
-            //HTTP stuff
-            if(res.protocol === "http") {
-                console.log("Using HTTP protocol");
-                var server = http.createServer();
+        //HTTP stuff
+        if(res.protocol === "http") {
+            console.log("Using HTTP protocol");
+            server = http.createServer();
 
             //HTTPS Stuff
-            } else {
-                console.log("Using HTTPS protocol");
-                if(_.keys(res.certs).length == 0) {
-                    throw new Error("There is no HTTPS configuration find");
-                }
-
-                var certificates = {};
-                _.forIn(res.certs, function(certs_info, domain) {
-
-                    //replace key by file content
-                    if(fs.existsSync(certs_info.key)) {
-                        certs_info.key = fs.readFileSync(certs_info.key);
-                    } else {
-                        delete certs_info.key;
-                    }
-
-                    //replace cert by file content
-                    if(fs.existsSync(certs_info.cert)) {
-                        certs_info.cert = fs.readFileSync(certs_info.cert);
-                    } else {
-                        delete certs_info.cert;
-                    }
-
-                    //replace ca by file content
-                    if(fs.existsSync(certs_info.ca)) {
-                        certs_info.ca = fs.readFileSync(certs_info.ca);
-                    } else {
-                        delete certs_info.ca;
-                    }
-
-                    certificates[domain] = certs_info;
-
-                });
-
-                //Default cert is first one
-                var https_options = _.clone(_.values(certificates)[0]);
-
-                //use SNI if more than one certs
-                if(_.keys(res.certs).length > 1) {
-                    https_options.SNICallback = function(servername, callback) {
-                        if(certificates[servername]) {
-                            console.log("SINCallback found certificate for domain: "+servername+".");
-
-                            var context = tls.createSecureContext(certificates[servername]);
-
-                            // Compatibility with old versions of node
-                            if (callback) {
-                                callback(null, context);
-                            } else {
-                                return context;
-                            }
-                        }
-                    }
-                }
-
-                console.log("Default certificate: ");
-                console.log("Configuration:\n", https_options);
-
-
-                var server = https.createServer(https_options);
+        } else {
+            console.log("Using HTTPS protocol");
+            if(_.keys(res.certs).length < 1) {
+                throw new Error("There is no HTTPS configuration find");
             }
 
-            server.on("listening", function() {
-                io.attach(server);
-                console.log("Listening on port: "+port);
+            var certificates = {};
+            _.forIn(res.certs, function(certs_info, domain) {
 
-                try {
-                    fs.writeFileSync(pid_path, process.pid+":"+port, {encoding:'utf-8'});
-                } catch (e) {
-                    throw e;
+                //replace key by file content
+                if(fs.existsSync(certs_info.key)) {
+                    certs_info.key = fs.readFileSync(certs_info.key);
+                } else {
+                    delete certs_info.key;
                 }
 
-                siberian.application.db.query("UPDATE system_config SET value=? WHERE code=?",
-                    [port, "socket_io_port"],
-                    function(err, results) {
-                        if(err) {
-                            throw err;
-                        }
-                        if(results.affectedRows < 1) {
-                            siberian.application.db.query("INSERT INTO system_config SET ?",
-                                {
-                                    value: port,
-                                    code: "socket_io_port",
-                                    label: "SocketIO Port"
-                                },
-                                function(err, results) {
-                                    if (err){
-                                        throw err;
-                                    }
-                                    if(results.affectedRows < 1) {
-                                        console.error("Can't store SocketIO port in the database!");
-                                    } else {
-                                        Server.runModules();
-                                    }
-                                }
-                            );
+                //replace cert by file content
+                if(fs.existsSync(certs_info.cert)) {
+                    certs_info.cert = fs.readFileSync(certs_info.cert);
+                } else {
+                    delete certs_info.cert;
+                }
+
+                //replace ca by file content
+                if(fs.existsSync(certs_info.ca)) {
+                    certs_info.ca = fs.readFileSync(certs_info.ca);
+                } else {
+                    delete certs_info.ca;
+                }
+
+                certificates[domain] = certs_info;
+
+            });
+
+            //Default cert is first one
+            var https_options = _.clone(_.values(certificates)[0]);
+
+            //use SNI if more than one certs
+            if(_.keys(res.certs).length > 1) {
+                https_options.SNICallback = function(servername, callback) {
+                    if(certificates[servername]) {
+                        console.log("SINCallback found certificate for domain: "+servername+".");
+
+                        var context = tls.createSecureContext(certificates[servername]);
+
+                        // Compatibility with old versions of node
+                        if (callback) {
+                            return callback(null, context);
                         } else {
-                            Server.runModules();
+                            return context;
                         }
                     }
-                );
-            });
+                    return null;
+                };
+            }
 
-            server.on("error", function(err) {
-                if(err.errno === 'EADDRINUSE') {
-                    console.warn("Failed using port "+port+" -> "+err.errno);
-                    if(port < 36000) {
-                        port++;
-                        server.listen(port);
-                        return;
+            console.log("Default certificate: ");
+            console.log("Configuration:\n", https_options);
+
+
+            server = https.createServer(https_options);
+        }
+
+        server.on("listening", function() {
+            io.attach(server);
+            console.log("Listening on port: "+port);
+
+            fs.writeFileSync(pid_path, process.pid+":"+port, {encoding:'utf-8'});
+
+            siberian.application.db.query(
+                "UPDATE system_config SET value=? WHERE code=?",
+                [port, "socket_io_port"],
+                function(err, results) {
+                    if(err) {
+                        throw err;
+                    }
+                    if(results.affectedRows < 1) {
+                        siberian.application.db.query("INSERT INTO system_config SET ?",
+                                                      {
+                                                          value: port,
+                                                          code: "socket_io_port",
+                                                          label: "SocketIO Port"
+                                                      },
+                                                      function(err, results) {
+                                                          if (err){
+                                                              throw err;
+                                                          }
+                                                          if(results.affectedRows < 1) {
+                                                              console.error("Can't store SocketIO port in the database!");
+                                                          } else {
+                                                              Server.runModules();
+                                                          }
+                                                      }
+                                                     );
+                    } else {
+                        Server.runModules();
                     }
                 }
-                throw err;
-            });
+            );
+        });
 
-            server.listen(port);
-        } catch (err) {
-            console.log(err);
-        }
+        server.on("error", function(err) {
+            if(err.errno === 'EADDRINUSE') {
+                console.warn("Failed using port "+port+" -> "+err.errno);
+                if(port < 36000) {
+                    port++;
+                    server.listen(port);
+                    return;
+                }
+            }
+            throw err;
+        });
+
+        server.listen(port);
     }, function(err){
         throw err;
-    })
-}
+    });
+};
 
 Server.runModules = function(){
   // Requiring modules
@@ -269,7 +266,7 @@ Server.runModules = function(){
             process.exit(404);
         }
     });
-}
+};
 
 
 /**
@@ -354,7 +351,7 @@ function getHttpOptions() {
                     resolve({
                         "protocol":"https",
                         "certs":certs
-                    })
+                    });
 
                 });
             //if HTTP
@@ -362,14 +359,12 @@ function getHttpOptions() {
                 resolve({"protocol":"http"});
             }
         });
-    })
+    });
 }
 
 Server.init()
-    .then(function(){
-        Server.start();
-    })
+    .then(Server.start)
     .catch(function(err){
         console.error(err);
-        throw err;
+        process.exit(500);
     });
