@@ -99,7 +99,7 @@ Server.start = function() {
         } else {
             console.log("Using HTTPS protocol");
             if(_.keys(res.certs).length < 1) {
-                throw new Error("There is no HTTPS configuration find");
+                throw new Error("No HTTPS certificates found");
             }
 
             var certificates = {};
