@@ -59,7 +59,7 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
                 preg_match("/^\[Error\:(.*)\]$/m", $log, $matches);
 
                 if(count($matches) > 0) {
-                    throw new Exception("SocketIO: ".trim($matches[1]));
+                    throw new Exception(trim($matches[1]));
                 }
             }
         }

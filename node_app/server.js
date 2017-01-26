@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-console.log("---STARTING---");
-
 var path = require('path');
 var fs = require('fs');
 var net = require('net');
@@ -87,6 +85,7 @@ Server.init = function() {
 };
 
 Server.start = function() {
+    console.log("---STARTING---");
     return getHttpOptions().then(function(res){
         var server;
 
