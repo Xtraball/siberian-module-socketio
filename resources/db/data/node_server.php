@@ -1,5 +1,8 @@
 <?php
 # Register the node server in the cron scheduler
+$module = new Installer_Model_Installer_Module();
+$module->prepare("SocketIO");
+
 Siberian_Feature::installCronjob(
     "Node server watchdog",
     "SocketIO_Model_SocketIO_Module::serve",
@@ -10,7 +13,8 @@ Siberian_Feature::installCronjob(
     -1,
     true,
     5,
-    1
+    1,
+    $module->getId()
 );
 
 # Detect node
