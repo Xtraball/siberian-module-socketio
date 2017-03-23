@@ -18,11 +18,9 @@ var io = require('socket.io')();
 
 var print_status = argv.status;
 var kill = argv.kill;
-var pid = null, port = null;
+var pid = null, port = 35500;
 var pid_folder = path.join(siberian_path, "var/pid/");
 var pid_path = path.join(pid_folder, "socketio.pid");
-
-var port = 35500;
 
 var Server = {};
 
@@ -34,7 +32,7 @@ Server.init = function() {
             var pidfile = fs.readFileSync(pid_path, {encoding:"UTF-8"});
             if(typeof pidfile === "string" && pidfile.indexOf(":")) {
                 var data = pidfile.split(":");
-                pid = parseInt(data[0], 10) || null; port = parseInt(data[1], 10) || null;
+                pid = parseInt(data[0], 10) || null; current_port = parseInt(data[1], 10) || null;
             };
         } catch (e) {
             if(e.code !== "ENOENT") {
@@ -286,7 +284,7 @@ function check_server(cb) {
         }
 
         if(process_exists) {
-            if(port) {
+            if(current_port) {
                 var socket = new net.Socket();
                 var socket_alive = null;
 
@@ -303,7 +301,7 @@ function check_server(cb) {
                     cb(true);
                 });
 
-                socket.connect(port);
+                socket.connect(current_port);
 
                 return;
             }
