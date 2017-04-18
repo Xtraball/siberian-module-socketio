@@ -33,7 +33,7 @@ Server.init = function() {
             if(typeof pidfile === "string" && pidfile.indexOf(":")) {
                 var data = pidfile.split(":");
                 pid = parseInt(data[0], 10) || null; current_port = parseInt(data[1], 10) || null;
-            };
+            }
         } catch (e) {
             if(e.code !== "ENOENT") {
                 reject(e);
