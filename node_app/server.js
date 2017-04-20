@@ -100,6 +100,9 @@ Server.start = function() {
             }
 
             var certificates = {};
+            var wildcards = {};
+            var has_wildcards = false;
+
             _.forIn(res.certs, function(certs_info, domain) {
 
                 //replace key by file content
@@ -125,6 +128,11 @@ Server.start = function() {
 
                 certificates[domain] = certs_info;
 
+                if(domain.indexOf("*")) {
+                    has_wildcards = true;
+                    _.set(wildcards, _.reverse(domain.replace(/(\.)+/g, "$1").split(".")), {".": true});
+                }
+
             });
 
             //Default cert is first one
@@ -133,10 +141,28 @@ Server.start = function() {
             //use SNI if more than one certs
             if(_.keys(res.certs).length > 1) {
                 https_options.SNICallback = function(servername, callback) {
-                    if(certificates[servername]) {
+                    var adhoc_cert = certificates[servername];
+
+                    if(!adhoc_cert && has_wildcards) {
+                        reversed_sn = servername.replace(/(\.)+/g, "$1").split(".").reverse().join(".");
+
+                        while(reversed_sn.indexOf(".") >= 0) {
+                            path = reversed_sn;
+                            if(!!_.get(wildcards, path+"['.']", false)) break; // We found certificate, break out of loop
+
+                            path = reversed_sn.replace(/\.[^\.]*$/, "\.*");
+                            if(!!_.get(wildcards, path+"['.']", false)) break; // We found wildcard certificate, break out of loop
+
+                            reversed_sn = reversed_sn.replace(/\.[^\.]*$/, "");
+                        }
+
+                        adhoc_cert = certificates[path.split(".").reverse().join(".")];
+                    }
+
+                    if(adhoc_cert) {
                         console.log("SINCallback found certificate for domain: "+servername+".");
 
-                        var context = tls.createSecureContext(certificates[servername]);
+                        var context = tls.createSecureContext(adhoc_cert);
 
                         // Compatibility with old versions of node
                         if (callback) {
@@ -144,6 +170,8 @@ Server.start = function() {
                         } else {
                             return context;
                         }
+                    } else {
+                        console.warn("SNICallback could not find a certificate for domain: "+servername+".");
                     }
                     return null;
                 };
@@ -151,7 +179,10 @@ Server.start = function() {
 
             console.log("Default certificate: ");
             console.log("Configuration:\n", https_options);
-
+            console.log("Certificates available for domains: ");
+            _.forEach(certificates, function(cert, domain) {
+                console.log("- "+domain);
+            });
 
             server = https.createServer(https_options);
         }
