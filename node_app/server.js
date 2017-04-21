@@ -362,10 +362,16 @@ function getHttpOptions() {
                         var result = results[i];
 
                         //foreach domain managed by certificate, add a new entry. Will be usefull ofr SNI
-                        //note: hostname is in domains
+                        //note: hostname is in domains (but sometime not, so let's verify)
                         if(result.domains) {
-                            var domains = JSON.parse(result.domains) || {};
-                            for(var j=0; j<domains.length; j++){
+                            var domains = JSON.parse(result.domains) || [];
+                            var hostname = _.isString(result.hostname) ? result.hostname.trim() : null;
+
+                            if(hostname && domains.indexOf(hostname) === -1) {
+                                domains.push(hostname);
+                            }
+
+                            for(var j=0; j<domains.length; j++) {
                                 var domain = domains[j];
                                 certs[domain] = {
                                     "ca":result.fullchain,
