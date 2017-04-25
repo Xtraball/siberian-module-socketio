@@ -18,13 +18,23 @@ var io = require('socket.io')();
 
 var print_status = argv.status;
 var kill = argv.kill;
-var pid = null, port = 35500;
+var pid = null, port = 35500, max_port = 36000;
 var pid_folder = path.join(siberian_path, "var/pid/");
 var pid_path = path.join(pid_folder, "socketio.pid");
 
 var Server = {};
 
 Server.init = function() {
+    var port_config = _.get(siberian.application.config.app.ini, "production.siberian.socketio.port", "");
+    if(_.isString(port_config)) {
+        port_config =  _.trim(port_config);
+        var port_config_matches = port_config.match(/^(\d+)(?:-(\d+))?$/);
+        if(port_config_matches) {
+            port = +(port_config_matches[1]);
+            max_port = +(port_config_matches[2] || port);
+        }
+    }
+
     return new Promise(function(resolve,reject){
         try { fs.mkdirSync(pid_folder); } catch(e) { if(e.code !== "EEXIST") reject(e); }
 
@@ -228,7 +238,7 @@ Server.start = function() {
         server.on("error", function(err) {
             if(err.errno === 'EADDRINUSE') {
                 console.warn("Failed using port "+port+" -> "+err.errno);
-                if(port < 36000) {
+                if(port < max_port) {
                     port++;
                     server.listen(port);
                     return;
