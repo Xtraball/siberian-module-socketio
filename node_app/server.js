@@ -255,7 +255,7 @@ Server.start = function() {
 
 Server.runModules = function(){
   // Requiring modules
-    siberian.application.db.query("SELECT name, path FROM socket_io;", function(err, results) {
+    siberian.application.db.query("SELECT name, path FROM socket_io GROUP BY path;", function(err, results) {
         if (err){
             throw err;
         }
