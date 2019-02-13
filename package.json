@@ -2,11 +2,11 @@
   "name": "SocketIO",
   "description": "Realtime interaction for other modules",
   "type": "module",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "dependencies": {
     "system": {
       "type": "SAE",
-      "version": "4.12.8"
+      "version": "4.15.15"
     }
   },
   "assets": {
