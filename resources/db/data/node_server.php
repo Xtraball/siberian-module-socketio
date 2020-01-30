@@ -1,11 +1,14 @@
 <?php
+
+use Siberian\Feature;
+
 # Register the node server in the cron scheduler
 $module = new Installer_Model_Installer_Module();
-$module->prepare("SocketIO");
+$module->prepare('SocketIO');
 
-Siberian_Feature::installCronjob(
-    "Node server watchdog",
-    "SocketIO_Model_SocketIO_Module::serve",
+Feature::installCronjob(
+    'Node server watchdog',
+    'SocketIO_Model_SocketIO_Module::serve',
     -1,
     -1,
     -1,
@@ -20,84 +23,28 @@ Siberian_Feature::installCronjob(
 # Detect node
 try {
     # Chmod +x allow for execution
-    exec("chmod +x ".Core_Model_Directory::getBasePathTo("/app/local/modules/SocketIO/resources/bin/")."*");
+    $resourcePath = path('/app/local/modules/SocketIO/resources/bin/');
+    exec('chmod +x ' . $resourcePath . '*');
 
-    $bin_path = false;
+    $binPath = false;
 
-    # Test 1
-    exec("/usr/local/bin/nodejs --version 2>&1", $output, $return_val);
-    if($return_val === 0) {
-        $bin_path = "/usr/local/bin/nodejs";
+    $bin64 = path('/app/local/modules/SocketIO/resources/bin/node_64');
+    exec($bin64 . ' --version 2>&1', $output, $return_val);
+
+    if ($return_val === 0) {
+        $binPath = $bin64;
     }
-
-    # Test 2
-    if(!$bin_path) {
-        exec("/usr/bin/nodejs --version 2>&1", $output, $return_val);
-
-        if($return_val === 0) {
-            $bin_path = "/usr/bin/nodejs";
-        }
-    }
-
-    // # Test 3
-    // if(!$bin_path) {
-    //     exec("/usr/local/bin/node --version 2>&1", $output, $return_val);
-    //
-    //     if($return_val === 0) {
-    //         $bin_path = "/usr/local/bin/node";
-    //     }
-    // }
-    //
-    // # Test 4
-    // if(!$bin_path) {
-    //     exec("/usr/bin/node --version 2>&1", $output, $return_val);
-    //
-    //     if($return_val === 0) {
-    //         $bin_path = "/usr/bin/node";
-    //     }
-    // }
-
-    # Fallback
-    if(!$bin_path) {
-        # Windows
-        # $exe_32_path = Core_Model_Directory::getBasePathTo("/app/local/modules/SocketIO/resources/bin/node_32.exe");
-        # $exe_64_path = Core_Model_Directory::getBasePathTo("/app/local/modules/SocketIO/resources/bin/node_32.exe");
-
-        # Fallback with the node binaries
-        # MacOSX
-        $is_darwin = exec("uname");
-        if(strpos($is_darwin, "arwin") !== false) {
-            $bin_path = Core_Model_Directory::getBasePathTo("/app/local/modules/SocketIO/resources/bin/node_64.osx");
-            # Windows
-        } else {
-            $bin_32 = Core_Model_Directory::getBasePathTo("/app/local/modules/SocketIO/resources/bin/node_32");
-            exec($bin_32." --version 2>&1", $output, $return_val);
-
-            if($return_val === 0) {
-                $bin_path = $bin_32;
-            } else {
-
-                $bin_64 = Core_Model_Directory::getBasePathTo("/app/local/modules/SocketIO/resources/bin/node_64");
-                exec($bin_64." --version 2>&1", $output, $return_val);
-
-                if($return_val === 0) {
-                    $bin_path = $bin_64;
-                }
-            }
-        }
-    }
-
-} catch (Exception $e) {
-    $bin_path = false;
+} catch (\Exception $e) {
+    $binPath = false;
 }
 
-$data = array(
-    "code" => "node_binary_path",
-    "label" => "Node path",
-    "value" => $bin_path,
-);
+$data = [
+    'code' => 'node_binary_path',
+    'label' => 'Node path',
+    'value' => $binPath,
+];
 
 $config = new System_Model_Config();
 $config
     ->setData($data)
-    ->insertOrUpdate(array("code"));
+    ->insertOrUpdate(['code']);
