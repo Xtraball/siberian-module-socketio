@@ -18,10 +18,19 @@ function Siberian_Application_Db(siberian) {
     };
 
     var firstConnection = true;
+    var gotENOTFOUND = false;
 
     self.init = function() {
         if(_connection == null) {
             var params = siberian.application.config.app.ini.production.resources.db.params;
+            params.host = params.host.split(":")[0];
+
+            // Just in case localhost is not working!
+            if (gotENOTFOUND) {
+                params.host = params.host.replace("localhost", "127.0.0.1");
+                gotENOTFOUND = false;
+            }
+
             _connection = mysql.createConnection({
                 host: params.host,
                 user: params.username,
@@ -42,13 +51,20 @@ function Siberian_Application_Db(siberian) {
             });
         }
 
-        if(_connection.state == "disconnected") {
+        if (_connection.state === "disconnected") {
             _connection.connect(function(err) {              // The server is either down
-                if(err) {                                     // or restarting (takes a while sometimes).
-                  console.log('error when connecting to db:', err);
-                  setTimeout(self.reset, 1000); // We introduce a delay before attempting to reconnect,
-                }                                     // to avoid a hot loop, and to allow our node script to
-            });                                     // process asynchronous requests in the meantime.
+                if(err) {
+                    console.log('error when connecting to db:', err);
+                    // or restarting (takes a while sometimes).
+                    if (err.code === "ENOTFOUND") {
+                        gotENOTFOUND = true;
+                    }
+                    // We introduce a delay before attempting to reconnect!
+                    // to avoid a hot loop, and to allow our node script to
+                    // process asynchronous requests in the meantime.
+                    setTimeout(self.reset, 15000);
+                }
+            });
         }
 
         return self;

@@ -1,7 +1,6 @@
 ### 1.7.0 ###
 
-- Installer now requires node_64 and a 64-bit OS, no more using system nodejs
-- Fixes logging issues
+- Updated node version to 8.17
 
 ### 1.6.0 ###
 

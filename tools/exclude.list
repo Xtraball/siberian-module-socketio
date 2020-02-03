@@ -6,8 +6,4 @@ README.md
 .eslintrc
 .directory
 *.zip
-docs*
 tools*
-scripts/build.php
-sass*
-resources/bin/node_64.osx
