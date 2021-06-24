@@ -7,3 +7,4 @@ README.md
 .directory
 *.zip
 tools*
+*node_64.osx

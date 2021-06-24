@@ -5,16 +5,40 @@
  */
 class SocketIO_Model_SocketIO_Module extends Core_Model_Default
 {
+    /**
+     * @var string
+     */
+    public static $basePath;
 
     /**
-     * SocketIO_Model_SocketIO_Module constructor.
-     * @param array $params
+     * @var string
      */
-    public function __construct($params = [])
+    public static $logPath;
+
+    /**
+     * @var string
+     */
+    public static $baseNode;
+
+    /**
+     * @var string
+     */
+    public static $binPath;
+
+    /**
+     * @var string
+     */
+    protected $_db_table = SocketIO_Model_Db_Table_SocketIO_Module::class;
+
+    /**
+     *
+     */
+    public static function setVars()
     {
-        parent::__construct($params);
-        $this->_db_table = 'SocketIO_Model_Db_Table_SocketIO_Module';
-        return $this;
+        self::$basePath = path('/');
+        self::$logPath = path('/var/log/module_socketio.log');
+        self::$baseNode = path('/app/local/modules/SocketIO/node_app');
+        self::$binPath = path('/app/local/modules/SocketIO/resources/bin/node_64');
     }
 
     /**
@@ -41,29 +65,18 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
      */
     public static function serve($cron, $task)
     {
-        $base_path = Core_Model_Directory::getBasePathTo("");
-        $log_path = Core_Model_Directory::getBasePathTo("var/log/modules/socketio.log");
-        if (!is_dir(dirname($log_path)) && !mkdir(dirname($log_path), 0777, true)) {
-            $log_path = Core_Model_Directory::getBasePathTo("var/log/modules/socketio.log");
-        }
-        $base_node = Core_Model_Directory::getBasePathTo("app/local/modules/SocketIO/node_app");
-        $bin_path = System_Model_Config::getValueFor("node_binary_path");
+        self::setVars();
 
-        if (!$bin_path) {
-            $cron->log("Node is not installed.");
-            return;
-        }
-
-        $command = sprintf("%s %s/server.js %s >> %s 2>&1", $bin_path, $base_node, $base_path, $log_path);
+        $command = sprintf("%s %s/server.js %s >> %s 2>&1", self::$binPath, self::$baseNode, self::$basePath, self::$logPath);
 
         try {
             $cron->log($command);
             exec($command, $output, $return);
         } catch (\Exception $e) {
-            $cron->log("Node server exception.");
+            $cron->log('Node server exception.');
         }
 
-        if ($log = @file_get_contents($log_path)) {
+        if ($log = @file_get_contents(self::$logPath)) {
             $pos = strrpos($log, "---STARTING---");
             if ($pos >= 0) {
                 $log = substr($log, $pos);
@@ -82,18 +95,12 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
      */
     public static function serviceStatus()
     {
-        $base_path = Core_Model_Directory::getBasePathTo("");
-        $base_node = Core_Model_Directory::getBasePathTo("app/local/modules/SocketIO/node_app");
-        $bin_path = __get("node_binary_path");
+        self::setVars();
 
-        if (!$bin_path) {
-            return false;
-        }
-
-        $command = sprintf("%s %s/server.js %s --status", $bin_path, $base_node, $base_path);
+        $command = sprintf("%s %s/server.js %s --status", self::$binPath, self::$baseNode, self::$basePath);
         $output = null;
         exec($command, $output, $return);
-        return trim($output[0]) === "running";
+        return trim($output[0]) === 'running';
     }
 
     /**
@@ -101,19 +108,9 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
      */
     public static function killServer()
     {
-        $base_path = Core_Model_Directory::getBasePathTo("");
-        $log_path = Core_Model_Directory::getBasePathTo("var/log/modules/socketio.log");
-        if (!is_dir(dirname($log_path)) && !mkdir(dirname($log_path), 0777, true)) {
-            $log_path = Core_Model_Directory::getBasePathTo("var/log/modules/socketio.log");
-        }
-        $base_node = Core_Model_Directory::getBasePathTo("app/local/modules/SocketIO/node_app");
-        $bin_path = __get("node_binary_path");
+        self::setVars();
 
-        if (!$bin_path) {
-            return false;
-        }
-
-        $command = sprintf("%s %s/server.js %s --kill >> %s 2>&1", $bin_path, $base_node, $base_path, $log_path);
+        $command = sprintf("%s %s/server.js %s --kill >> %s 2>&1", self::$binPath, self::$baseNode, self::$basePath, self::$logPath);
         $output = null;
         exec($command, $output, $return);
         return trim($output[0]) === "killed";
@@ -124,12 +121,9 @@ class SocketIO_Model_SocketIO_Module extends Core_Model_Default
      */
     public static function getSocketIOPort()
     {
-        $config = (new System_Model_Config())
-            ->find("socket_io_port", "code");
-        $port = $config->getValue();
-
+        $port = __get('socket_io_port');
         if (is_numeric($port)) {
-            $port = intval($port, 10);
+            $port = (int) $port;
             if ($port > 0) {
                 return $port;
             }

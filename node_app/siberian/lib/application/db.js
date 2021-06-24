@@ -23,7 +23,15 @@ function Siberian_Application_Db(siberian) {
     self.init = function() {
         if(_connection == null) {
             var params = siberian.application.config.app.ini.production.resources.db.params;
-            params.host = params.host.split(":")[0];
+            var hostParts = params.host.split(":");
+            if (hostParts.length === 1) {
+                params.host = hostParts[0];
+                params.port = 3306;
+            } else {
+                params.host = hostParts[0];
+                params.port = hostParts[1];
+            }
+
 
             // Just in case localhost is not working!
             if (gotENOTFOUND) {
@@ -33,6 +41,7 @@ function Siberian_Application_Db(siberian) {
 
             _connection = mysql.createConnection({
                 host: params.host,
+                port: params.port,
                 user: params.username,
                 password: params.password,
                 database: params.dbname,
