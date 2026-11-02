@@ -19,3 +19,13 @@
 
 - **Downloader**: `Xtraball/marketplace-module-downloader`, the service that delivers licensed packages.
 - **SK / LK**: the customer's Siberian licence key and the module licence key.
+
+## 2026-11-01 Translations for the 14 core locales (3.1.0)
+
+- **What.** `resources/translations/<code>/<file>.po` for ca, cs, de, el, es, fr, hi, it, ja, nl, pt_BR, ru, tr, zh_Hans, same file name, contexts and `#, mobile` flags as `resources/translations/default/`. English stays the default. Machine translated (`#. machine-translated (2026-11), to be reviewed`).
+- **Loader.** Nothing to change in the core (Siberian PR 983: shipped locales rank after the user files and installed packs).
+- **Gaps fixed.** Texts passed to `p__()` but missing from the default catalog were added to it.
+- **Test.** `php tests/translations.php`.
+- **Remember.** A new text in the code means a line in the default catalog and in the 14 locales, or the test fails.
+
+- **csv to po (2026-11-01).** The module used a legacy `resources/translations/default/*.csv` (+ `mobile.csv.list`). Its static `__()` / `__js()` calls are now `p__()` / `p__js()` with the context `socketio`, the texts are in `resources/translations/default/socketio.po` (`#, mobile` for the former mobile list), the csv and the list are removed. Texts the core already translates (Save, Cancel...) stay `__()`.
